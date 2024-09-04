@@ -1,4 +1,4 @@
-module ghaninia/gokit
+module github.com/ghaninia/gokit
 
 go 1.21.0
 

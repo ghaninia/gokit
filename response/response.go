@@ -2,7 +2,7 @@ package response
 
 import (
 	"errors"
-	"ghaninia/gokit/translation"
+	"github.com/ghaninia/gokit/translation"
 
 	"net/http"
 

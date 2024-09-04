@@ -2,7 +2,7 @@ package response
 
 import (
 	"testing"
-	"ghaninia/gokit/translation"
+	"github.com/ghaninia/gokit/translation"
 
 	"github.com/go-playground/validator/v10"
 )
