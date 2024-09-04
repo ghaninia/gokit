@@ -2,7 +2,7 @@ package response
 
 import (
 	"errors"
-	"thelist-app/gokit/translation"
+	"ghaninia/gokit/translation"
 
 	"net/http"
 

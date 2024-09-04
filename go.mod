@@ -1,4 +1,4 @@
-module thelist-app/gokit
+module ghaninia/gokit
 
 go 1.21.0
 
