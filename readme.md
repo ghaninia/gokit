@@ -6,6 +6,6 @@ Go kit is a programming toolkit for building microservices (or elegant monoliths
 - **Translation**: Translate complex domain types to transport types, and vice versa.
 ### 3. Installation
 ```bash 
-go get github.com/thelist-app/gokit
+go get github.com/ghaninia/gokit
 ```
 
