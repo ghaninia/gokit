@@ -21,6 +21,7 @@ type Response interface {
 	WithMeta(data interface{}) Response
 	Echo(ctx *gin.Context)
 	EchoPure() (statusCode int, response map[string]any)
+	WithStatusCode(statusCode int) Response
 }
 
 type response struct {
