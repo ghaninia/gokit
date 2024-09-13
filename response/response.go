@@ -17,6 +17,7 @@ const (
 type Response interface {
 	Validation(err error) Response
 	WithPayload(data any) Response
+	WithMessage(message string, args ...map[string]interface{}) Response
 	WithError(err error) Response
 	WithMeta(data interface{}) Response
 	Echo(ctx *gin.Context)
@@ -24,10 +25,11 @@ type Response interface {
 	WithStatusCode(statusCode int) Response
 }
 
-type response struct {
+type Resource struct {
 	statusCodeMapping map[string]int
 	translation       translation.Translation
 	response          map[string]interface{}
+	message           *string
 	payload           *any
 	validation        *Validations
 	statusCode        *int
@@ -53,7 +55,7 @@ func NewResponse(
 		statusCodeMapping = statusCodeMappings[0]
 	}
 
-	return &response{
+	return &Resource{
 		statusCodeMapping: statusCodeMapping,
 		translation:       trans,
 		response:          make(map[string]interface{}),
@@ -61,26 +63,37 @@ func NewResponse(
 }
 
 // Validation sets the validation error to be sent to the client.
-func (r *response) Validation(err error) Response {
+func (r *Resource) Validation(err error) Response {
 	v := newValidationTranslator(r.translation).translate(err)
 	r.validation = &v
 	return r
 }
 
+// WithMessage sets the message to be sent to the client.
+func (r *Resource) WithMessage(message string, args ...map[string]interface{}) Response {
+	var arg map[string]interface{}
+	if len(args) > 0 {
+		arg = args[0]
+	}
+	trans := r.translation.Trans(message, arg)
+	r.message = &trans
+	return r
+}
+
 // WithMeta sets the meta data to be sent to the client.
-func (r *response) WithMeta(data interface{}) Response {
+func (r *Resource) WithMeta(data interface{}) Response {
 	r.response["meta"] = data
 	return r
 }
 
 // WithPayload sets the data to be sent to the client.
-func (r *response) WithPayload(data any) Response {
+func (r *Resource) WithPayload(data any) Response {
 	r.payload = &data
 	return r
 }
 
 // WithError sets the error to be sent to the client.
-func (r *response) WithError(err error) Response {
+func (r *Resource) WithError(err error) Response {
 	if err == nil {
 		return r
 	}
@@ -96,13 +109,13 @@ func (r *response) WithError(err error) Response {
 }
 
 // WithStatusCode sets the status code to be sent to the client.
-func (r *response) WithStatusCode(statusCode int) Response {
+func (r *Resource) WithStatusCode(statusCode int) Response {
 	r.statusCode = &statusCode
 	return r
 }
 
 // EchoPure returns the response to be sent to the client.
-func (r *response) EchoPure() (statusCode int, response map[string]any) {
+func (r *Resource) EchoPure() (statusCode int, response map[string]any) {
 	if r.statusCode != nil {
 		statusCode = *r.statusCode
 	} else {
@@ -151,11 +164,19 @@ func (r *response) EchoPure() (statusCode int, response map[string]any) {
 		r.response["data"] = *r.payload
 	}
 
+	if r.statusCode != nil {
+		statusCode = *r.statusCode
+	}
+
+	if r.message != nil {
+		r.response["message"] = *r.message
+	}
+
 	return statusCode, r.response
 }
 
 // Echo sends the response to the client.
-func (r *response) Echo(ctx *gin.Context) {
+func (r *Resource) Echo(ctx *gin.Context) {
 	statusCode, rsp := r.EchoPure()
 	if statusCode >= http.StatusOK && statusCode < http.StatusMultipleChoices {
 		ctx.JSON(statusCode, rsp)
@@ -166,7 +187,7 @@ func (r *response) Echo(ctx *gin.Context) {
 
 // getStatusMapping returns the status code based on the error message.
 // If the error message is not found in the status code mapping, it returns 500.
-func (r *response) getStatusMapping() (statusCode int) {
+func (r *Resource) getStatusMapping() (statusCode int) {
 	switch {
 	case r.responseError != nil:
 		{
