@@ -2,6 +2,7 @@ package response
 
 import (
 	"errors"
+	"github.com/ghaninia/gokit/meta"
 	"github.com/ghaninia/gokit/translation"
 
 	"net/http"
@@ -13,6 +14,13 @@ const (
 	errTypeMsgSomethingIsWrong  = "server.errors.something_is_wrong"
 	errTypeInfoSomethingIsWrong = "something_is_wrong"
 )
+
+type NormalizeResponse struct {
+	Data    *interface{} `json:"data"`
+	Message *string      `json:"message"`
+	Errors  *interface{} `json:"errors"`
+	Meta    *meta.Meta   `json:"meta"`
+}
 
 type Response interface {
 	Validation(err error) Response
@@ -178,11 +186,41 @@ func (r *Resource) EchoPure() (statusCode int, response map[string]any) {
 // Echo sends the response to the client.
 func (r *Resource) Echo(ctx *gin.Context) {
 	statusCode, rsp := r.EchoPure()
+	response := NormalizeResponse{
+		Data: func() *interface{} {
+			if rsp["data"] == nil {
+				return nil
+			}
+			res := rsp["data"]
+			return &res
+		}(),
+		Message: func() *string {
+			if rsp["message"] == nil {
+				return nil
+			}
+			res := rsp["message"].(string)
+			return &res
+		}(),
+		Errors: func() *interface{} {
+			if rsp["errors"] == nil {
+				return nil
+			}
+			res := rsp["errors"]
+			return &res
+		}(),
+		Meta: func() *meta.Meta {
+			if rsp["meta"] == nil {
+				return nil
+			}
+			res := rsp["meta"].(meta.Meta)
+			return &res
+		}(),
+	}
 	if statusCode >= http.StatusOK && statusCode < http.StatusMultipleChoices {
-		ctx.JSON(statusCode, rsp)
+		ctx.JSON(statusCode, response)
 		return
 	}
-	ctx.AbortWithStatusJSON(statusCode, rsp)
+	ctx.AbortWithStatusJSON(statusCode, response)
 }
 
 // getStatusMapping returns the status code based on the error message.
