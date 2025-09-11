@@ -16,10 +16,10 @@ const (
 )
 
 type NormalizeResponse struct {
-	Data    *interface{} `json:"data;omitempty"`
-	Message *string      `json:"message;omitempty"`
-	Errors  *interface{} `json:"errors;omitempty"`
-	Meta    *meta.Meta   `json:"meta;omitempty"`
+	Data    *interface{} `json:"data,omitempty"`
+	Message *string      `json:"message,omitempty"`
+	Errors  *interface{} `json:"errors,omitempty"`
+	Meta    *meta.Meta   `json:"meta,omitempty"`
 }
 
 type Response interface {
