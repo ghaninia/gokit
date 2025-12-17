@@ -2,6 +2,7 @@ package response
 
 import (
 	"errors"
+
 	"github.com/ghaninia/gokit/meta"
 	"github.com/ghaninia/gokit/translation"
 
@@ -243,7 +244,12 @@ func (r *Resource) getStatusMapping() (statusCode int) {
 		}
 	case r.nativeError != nil:
 		{
-			statusCode = http.StatusInternalServerError
+			msg := r.nativeError.Error()
+			if val, ok := r.statusCodeMapping[msg]; !ok {
+				statusCode = http.StatusInternalServerError
+			} else {
+				statusCode = val
+			}
 		}
 	default:
 		{
